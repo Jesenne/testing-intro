@@ -2,11 +2,73 @@ function notImplemented() {
   throw new Error('Корзина ещё не реализована. Сначала прочитайте тесты.');
 }
 
-function addToCart() { return notImplemented(); }
-function changeQuantity() { return notImplemented(); }
-function removeFromCart() { return notImplemented(); }
-function calculateCartSubtotal() { return notImplemented(); }
-function calculateOrderTotal() { return notImplemented(); }
+function validateQuantity(quantity) {
+  if (!(quantity > 0))
+    throw new RangeError('Количество товара должно быть больше 0');
+}
+
+function validateStock(quantity, stock) {
+  if (stock < quantity) {
+    throw new RangeError('Недостаточно товара на складе');
+  }
+}
+
+function addToCart(cart, product, quantity) {
+  validateQuantity(quantity);
+
+  const productExists = cart.find((item) => item.id === product.id);
+  const newQuantity = (productExists ? productExists.quantity : 0) + quantity;
+
+  validateStock(newQuantity, product.stock);
+
+  if (productExists) {
+    return cart.map((item) =>
+      item.id === product.id ? { ...item, quantity: newQuantity } : item
+    );
+  }
+
+  return [...cart, { ...product, quantity: newQuantity }];
+}
+
+function changeQuantity(cart, id, quantity) {
+  validateQuantity(quantity);
+
+  const productExists = cart.find((item) => item.id === id);
+  if (productExists) {
+    validateStock(quantity, productExists.stock);
+    return cart.map((item) =>
+      item.id === id ? { ...item, quantity: quantity } : item
+    );
+  }
+  return cart;
+}
+
+function removeFromCart(cart, id) {
+  return cart.filter((item) => item.id !== id);
+}
+
+function calculateCartSubtotal(cart) {
+  return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+}
+
+function calculateOrderTotal(cart, promo) {
+  const PROMO = 'SAVE10';
+  const DISCOUNT = 10;
+  const SUM_FOR_DISCOUNT = 20000;
+  const DELIVERY = 30000;
+  const SUM_FOR_FREE_DELIVERY = 50000;
+
+  const subtotal = calculateCartSubtotal(cart);
+  const discount = (subtotal >= SUM_FOR_DISCOUNT && promo === PROMO) ? subtotal * DISCOUNT / 100 : 0;
+  const delivery = ((subtotal - discount) < SUM_FOR_FREE_DELIVERY) ? DELIVERY : 0;
+
+  return {
+    subtotal: subtotal,
+    discount: discount,
+    delivery: delivery,
+    total: subtotal - discount + delivery
+  };
+}
 
 const cartApi = { addToCart, changeQuantity, removeFromCart, calculateCartSubtotal, calculateOrderTotal };
 
