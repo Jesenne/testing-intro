@@ -30,7 +30,19 @@ function addToCart(cart, product, quantity) {
   return [...cart, { ...product, quantity: newQuantity }];
 }
 
-function changeQuantity() { return notImplemented(); }
+function changeQuantity(cart, id, quantity) {
+  validateQuantity(quantity);
+
+  const productExists = cart.find((item) => item.id === id);
+  if (productExists) {
+    validateStock(quantity, productExists.stock);
+    return cart.map((item) =>
+      item.id === id ? { ...item, quantity: quantity } : item
+    );
+  }
+  return cart;
+}
+
 function removeFromCart() { return notImplemented(); }
 function calculateCartSubtotal() { return notImplemented(); }
 function calculateOrderTotal() { return notImplemented(); }
